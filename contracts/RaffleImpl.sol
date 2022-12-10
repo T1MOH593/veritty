@@ -94,39 +94,6 @@ contract RaffleImpl is ERC1155, VRFConsumerBaseV2, Ownable, Raffle {
         emit WinnerChosen(player, isWinner, tokenIdWinner);
     }
 
-    function fulfillRandomWordss(uint256 requestId, uint256[] memory randomWords) external {
-        uint256 openPositionsLeft = tokensLeftByTokenId[tokensLeftByTokenId.length - 1];
-        uint256 randomNumber = randomWords[0] % openPositionsLeft;
-
-        uint256 length = tokensLeftByTokenId.length;
-        uint256 tokenIdWinner = tokensLeftByTokenId.length - 1;
-        // choose prize
-        // I use int256 because value can be negative
-        for (int256 i = int256(length) - 2; i >= 0; i--) {
-            if (i < 0) {
-                break;
-            }
-            if (tokensLeftByTokenId[uint256(i)] > randomNumber) {
-                tokenIdWinner = uint256(i);
-            }
-        }
-        // update prizes
-        // I use int256 because value can be negative
-        for (int256 i = int256(length) - 1; i >= 0 && uint256(i) >= tokenIdWinner; i--) {
-            tokensLeftByTokenId[uint256(i)] -= 1;
-        }
-
-        // allow mint to winner
-        address player = addressByRequestId[requestId];
-        bool isWinner;
-        if (tokenIdWinner != length - 1) {
-            // if user won prize
-            allowedMint[player][tokenIdWinner] += 1;
-            isWinner = true;
-        }
-        emit WinnerChosen(player, isWinner, tokenIdWinner);
-    }
-
     function mint(uint256 tokenId, uint256 amount) external {
         require(allowedMint[msg.sender][tokenId] > 0, "Raffle: Amount to mint is zero");
 
